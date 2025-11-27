@@ -3,36 +3,39 @@
 /* Two-column layout for screens above 1000px */
 @media screen and (min-width: 1000px) {
     .post-type-invoice #poststuff {
-        display: flex;
-        gap: 20px;
+        display: block
     }
 
     .post-type-invoice #post-body.columns-2 {
+        margin: 0!important;
+        padding: 0;
         display: flex;
-        margin: 0;
         gap: 20px;
+        flex-direction: row;
     }
 
     .post-type-invoice #post-body-content {
         margin-bottom: 20px;
+        display: none;
     }
 
     .post-type-invoice #postbox-container-1 {
-        flex: 1 !important;
+        width: 100% !important;
         float: none !important;
-        margin: 0 !important;
+        margin-right: 0 !important;
     }
 
     .post-type-invoice #postbox-container-2 {
-        width: 400px !important;
-        flex-shrink: 0 !important;
-        float: none !important;
-        margin: 0 !important;
         order: -1;
+        width: 400px;
     }
 
     .post-type-invoice .postbox-container {
         margin-right: 0 !important;
+    }
+
+    .post-type-invoice #postbox-container-1 #side-sortables {
+        width: 100% !important;
     }
 }
 
@@ -269,7 +272,11 @@
     }
 
     .post-type-invoice #post-body.columns-2 {
-        display: block;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        gap: 20px;
+        flex-direction: column-reverse;
     }
 }
 
