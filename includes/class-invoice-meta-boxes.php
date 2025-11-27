@@ -213,24 +213,26 @@ class Invoice_Meta_Boxes {
                 </button>
             </div>
 
-            <div class="invoice-field">
-                <label><?php _e('Service Title', 'invoice-creator'); ?></label>
-                <input type="text" name="line_items[<?php echo esc_attr($index); ?>][title]"
-                       value="<?php echo esc_attr($title); ?>"
-                       class="widefat" required>
-            </div>
+            <div class="line-item-fields">
+                <div class="invoice-field">
+                    <label><?php _e('Service Title', 'invoice-creator'); ?></label>
+                    <input type="text" name="line_items[<?php echo esc_attr($index); ?>][title]"
+                           value="<?php echo esc_attr($title); ?>"
+                           class="widefat" required>
+                </div>
 
-            <div class="invoice-field">
-                <label><?php _e('Service Details', 'invoice-creator'); ?></label>
-                <textarea name="line_items[<?php echo esc_attr($index); ?>][description]"
-                          rows="3" class="widefat"><?php echo esc_textarea($description); ?></textarea>
-            </div>
+                <div class="invoice-field">
+                    <label><?php _e('Service Details', 'invoice-creator'); ?></label>
+                    <textarea name="line_items[<?php echo esc_attr($index); ?>][description]"
+                              rows="3" class="widefat"><?php echo esc_textarea($description); ?></textarea>
+                </div>
 
-            <div class="invoice-field">
-                <label><?php _e('Price', 'invoice-creator'); ?></label>
-                <input type="number" name="line_items[<?php echo esc_attr($index); ?>][price]"
-                       value="<?php echo esc_attr($price); ?>"
-                       step="0.01" min="0" class="widefat line-item-price" required>
+                <div class="invoice-field">
+                    <label><?php _e('Price', 'invoice-creator'); ?></label>
+                    <input type="number" name="line_items[<?php echo esc_attr($index); ?>][price]"
+                           value="<?php echo esc_attr($price); ?>"
+                           step="0.01" min="0" class="widefat line-item-price" required>
+                </div>
             </div>
         </div>
         <?php

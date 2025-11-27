@@ -117,11 +117,14 @@
     text-decoration: underline;
 }
 
-.line-item .invoice-field {
-    margin-bottom: 12px;
+.line-item-fields {
+    display: grid;
+    grid-template-columns: 1fr 2fr 120px;
+    gap: 12px;
+    align-items: start;
 }
 
-.line-item .invoice-field:last-child {
+.line-item .invoice-field {
     margin-bottom: 0;
 }
 
