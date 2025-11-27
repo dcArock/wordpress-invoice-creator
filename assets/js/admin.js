@@ -12,6 +12,7 @@
             this.setupLineItems();
             this.setupAutoCalculations();
             this.setupTitleSync();
+            this.setupKeyboardNavigation();
             this.updateItemNumbers();
         },
 
@@ -143,6 +144,21 @@
             // Prevent user from editing the hidden title
             $('#title').on('focus', function() {
                 $(this).blur();
+            });
+        },
+
+        /**
+         * Setup keyboard navigation for line items
+         */
+        setupKeyboardNavigation: function() {
+            var self = this;
+
+            // Handle Enter key on price field to add new item
+            $(document).on('keydown', '.line-item input[name*="[price]"]', function(e) {
+                if (e.keyCode === 13) { // Enter key
+                    e.preventDefault();
+                    self.addLineItem();
+                }
             });
         }
     };
