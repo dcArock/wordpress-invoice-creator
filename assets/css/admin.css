@@ -1,0 +1,310 @@
+/* Invoice Creator Admin Styles */
+
+/* Two-column layout for screens above 1000px */
+@media screen and (min-width: 1000px) {
+    .post-type-invoice #poststuff {
+        display: flex;
+        gap: 20px;
+    }
+
+    .post-type-invoice #post-body.columns-2 {
+        display: flex;
+        margin: 0;
+        gap: 20px;
+    }
+
+    .post-type-invoice #post-body-content {
+        margin-bottom: 20px;
+    }
+
+    .post-type-invoice #postbox-container-1 {
+        width: 60% !important;
+        float: none !important;
+        margin: 0 !important;
+    }
+
+    .post-type-invoice #postbox-container-2 {
+        width: 40% !important;
+        float: none !important;
+        margin: 0 !important;
+        order: -1;
+    }
+
+    .post-type-invoice .postbox-container {
+        margin-right: 0 !important;
+    }
+}
+
+/* Invoice field styling */
+.invoice-field {
+    margin-bottom: 20px;
+}
+
+.invoice-field label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: #1d2327;
+}
+
+.invoice-field input[type="text"],
+.invoice-field input[type="email"],
+.invoice-field input[type="number"],
+.invoice-field input[type="date"],
+.invoice-field textarea {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #8c8f94;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.invoice-field input[readonly] {
+    background-color: #f6f7f7;
+    cursor: not-allowed;
+}
+
+.invoice-field .description {
+    margin-top: 6px;
+    font-size: 13px;
+    color: #646970;
+    font-style: italic;
+}
+
+/* Line items styling */
+#invoice-line-items {
+    padding: 12px;
+}
+
+#line-items-container {
+    margin-bottom: 20px;
+}
+
+.line-item {
+    background: #f6f7f7;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    padding: 16px;
+    margin-bottom: 16px;
+    position: relative;
+}
+
+.line-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #dcdcde;
+}
+
+.line-item-number {
+    font-weight: 600;
+    font-size: 13px;
+    color: #1d2327;
+}
+
+.remove-line-item {
+    color: #d63638;
+    text-decoration: none;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.remove-line-item:hover {
+    color: #b32d2e;
+    text-decoration: underline;
+}
+
+.line-item .invoice-field {
+    margin-bottom: 12px;
+}
+
+.line-item .invoice-field:last-child {
+    margin-bottom: 0;
+}
+
+.line-item label {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #50575e;
+    margin-bottom: 4px;
+}
+
+.line-item input,
+.line-item textarea {
+    font-size: 13px;
+    padding: 6px 10px;
+}
+
+#add-line-item {
+    width: 100%;
+    padding: 10px;
+    text-align: center;
+    border: 2px dashed #c3c4c7;
+    background: #fff;
+    color: #2271b1;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+#add-line-item:hover {
+    border-color: #2271b1;
+    background: #f6f7f7;
+}
+
+/* Totals styling */
+#invoice-totals .inside {
+    padding: 16px;
+}
+
+#invoice-totals .invoice-field input {
+    font-size: 16px;
+    font-weight: 600;
+    padding: 10px 12px;
+}
+
+/* Custom buttons styling */
+#invoice-custom-buttons {
+    padding: 20px 16px;
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+    margin-top: 20px;
+}
+
+#invoice-custom-buttons button {
+    min-width: 150px;
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+#create-invoice-btn {
+    background: #2271b1;
+    border-color: #2271b1;
+    color: #fff;
+}
+
+#create-invoice-btn:hover {
+    background: #135e96;
+    border-color: #135e96;
+}
+
+#save-draft-btn {
+    background: #fff;
+    border-color: #2271b1;
+    color: #2271b1;
+}
+
+#save-draft-btn:hover {
+    background: #f6f7f7;
+}
+
+#print-invoice-btn {
+    background: #fff;
+    border-color: #50575e;
+    color: #50575e;
+}
+
+#print-invoice-btn:hover {
+    background: #f6f7f7;
+}
+
+/* Invoice status badges */
+.invoice-status {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.invoice-status-draft {
+    background: #f0f0f1;
+    color: #50575e;
+}
+
+.invoice-status-sent {
+    background: #d5e5f2;
+    color: #135e96;
+}
+
+.invoice-status-paid {
+    background: #d4edda;
+    color: #155724;
+}
+
+/* Hide default title field */
+.post-type-invoice #titlediv {
+    display: none;
+}
+
+/* Settings page styling */
+.invoice-creator-settings {
+    max-width: 800px;
+}
+
+#logo_preview img {
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    padding: 8px;
+    background: #fff;
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 999px) {
+    .post-type-invoice #postbox-container-1,
+    .post-type-invoice #postbox-container-2 {
+        width: 100% !important;
+    }
+
+    .post-type-invoice #post-body.columns-2 {
+        display: block;
+    }
+}
+
+/* Clean up WordPress admin elements */
+.post-type-invoice #message {
+    display: block !important;
+}
+
+/* Make sure metaboxes don't have unnecessary padding */
+.post-type-invoice .postbox .inside {
+    margin: 0;
+    padding: 12px;
+}
+
+#invoice-details .inside,
+#client-details .inside,
+#invoice-notes .inside {
+    padding: 16px;
+}
+
+/* Title placeholder */
+.post-type-invoice #title-prompt-text {
+    display: none;
+}
+
+/* Auto-calculate indicators */
+.auto-calculated {
+    position: relative;
+}
+
+.auto-calculated::after {
+    content: "Auto";
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 11px;
+    color: #646970;
+    background: #f0f0f1;
+    padding: 2px 6px;
+    border-radius: 3px;
+}
