@@ -22,6 +22,14 @@ class Invoice_Post_Type {
         add_action('init', array($this, 'register_post_type'));
         add_filter('manage_invoice_posts_columns', array($this, 'set_custom_columns'));
         add_action('manage_invoice_posts_custom_column', array($this, 'custom_column_content'), 10, 2);
+        add_action('admin_menu', array($this, 'remove_add_new_submenu'), 999);
+    }
+
+    /**
+     * Remove the default "Add New" submenu
+     */
+    public function remove_add_new_submenu() {
+        remove_submenu_page('edit.php?post_type=invoice', 'post-new.php?post_type=invoice');
     }
 
     /**

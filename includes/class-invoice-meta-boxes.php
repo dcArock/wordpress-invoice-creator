@@ -427,9 +427,19 @@ class Invoice_Meta_Boxes {
             return $location;
         }
 
-        if (isset($_POST['invoice_action']) && $_POST['invoice_action'] === 'create') {
-            // Redirect to the print view
-            $location = add_query_arg('print', '1', get_permalink($post_id));
+        // Check if this is a newly created invoice (not an update)
+        $is_new = get_post_meta($post_id, '_invoice_created', true);
+
+        if (isset($_POST['invoice_action']) && $_POST['invoice_action'] === 'create' && empty($is_new)) {
+            // Mark this invoice as created
+            update_post_meta($post_id, '_invoice_created', '1');
+
+            // Store the invoice URL in a transient to open in new tab
+            $invoice_url = add_query_arg('print', '1', get_permalink($post_id));
+            set_transient('invoice_created_' . get_current_user_id(), $invoice_url, 30);
+
+            // Redirect to All Invoices page
+            $location = admin_url('edit.php?post_type=invoice&page=all-invoices&invoice_created=1');
         }
 
         return $location;
