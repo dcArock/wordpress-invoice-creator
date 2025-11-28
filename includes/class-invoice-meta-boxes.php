@@ -394,14 +394,42 @@ class Invoice_Meta_Boxes {
         // Save invoice status based on action
         if (isset($_POST['invoice_action'])) {
             if ($_POST['invoice_action'] === 'create') {
-                // Publishing invoice - preserve existing status if not draft, otherwise set to 'new'
+                // Publishing invoice - set post status to publish and invoice status to 'new'
                 $current_status = get_post_meta($post_id, '_invoice_status', true);
                 if ($current_status === 'draft' || empty($current_status)) {
                     update_post_meta($post_id, '_invoice_status', 'new');
                 }
+
+                // Ensure post is published (not draft)
+                if ($post->post_status !== 'publish') {
+                    // Remove hook to prevent infinite loop
+                    remove_action('save_post_invoice', array($this, 'save_invoice_meta'), 10);
+
+                    wp_update_post(array(
+                        'ID' => $post_id,
+                        'post_status' => 'publish'
+                    ));
+
+                    // Re-add hook
+                    add_action('save_post_invoice', array($this, 'save_invoice_meta'), 10, 2);
+                }
             } elseif ($_POST['invoice_action'] === 'draft') {
                 // Saving as draft
                 update_post_meta($post_id, '_invoice_status', 'draft');
+
+                // Ensure post is draft
+                if ($post->post_status !== 'draft') {
+                    // Remove hook to prevent infinite loop
+                    remove_action('save_post_invoice', array($this, 'save_invoice_meta'), 10);
+
+                    wp_update_post(array(
+                        'ID' => $post_id,
+                        'post_status' => 'draft'
+                    ));
+
+                    // Re-add hook
+                    add_action('save_post_invoice', array($this, 'save_invoice_meta'), 10, 2);
+                }
             }
         }
     }

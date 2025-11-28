@@ -3,7 +3,7 @@
  * Plugin Name: Invoice Creator
  * Plugin URI: https://dcarock.com/wordpress
  * Description: A simple WordPress plugin to create, manage, and print professional invoices.
- * Version: 1.11
+ * Version: 1.12
  * Author: Chris Arock
  * Author URI: https://dcarock.com
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('INVOICE_CREATOR_VERSION', '1.11');
+define('INVOICE_CREATOR_VERSION', '1.12');
 define('INVOICE_CREATOR_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('INVOICE_CREATOR_PLUGIN_URL', plugin_dir_url(__FILE__));
 
