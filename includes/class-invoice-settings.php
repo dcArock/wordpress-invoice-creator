@@ -48,6 +48,7 @@ class Invoice_Settings {
         register_setting('invoice_creator_settings', 'invoice_creator_company_address');
         register_setting('invoice_creator_settings', 'invoice_creator_company_logo');
         register_setting('invoice_creator_settings', 'invoice_creator_next_number');
+        register_setting('invoice_creator_settings', 'invoice_creator_id_prefix');
     }
 
     /**
@@ -69,6 +70,7 @@ class Invoice_Settings {
             update_option('invoice_creator_company_address', sanitize_textarea_field($_POST['company_address']));
             update_option('invoice_creator_company_logo', esc_url_raw($_POST['company_logo']));
             update_option('invoice_creator_next_number', absint($_POST['next_invoice_number']));
+            update_option('invoice_creator_id_prefix', sanitize_text_field($_POST['invoice_id_prefix']));
 
             echo '<div class="notice notice-success is-dismissible"><p>' .
                  __('Settings saved successfully!', 'invoice-creator') . '</p></div>';
@@ -82,6 +84,7 @@ class Invoice_Settings {
         $company_address = get_option('invoice_creator_company_address', '');
         $company_logo = get_option('invoice_creator_company_logo', '');
         $next_number = get_option('invoice_creator_next_number', 1);
+        $id_prefix = get_option('invoice_creator_id_prefix', '');
         ?>
 
         <div class="wrap">
@@ -166,6 +169,20 @@ class Invoice_Settings {
                                              style="max-width: 200px; height: auto;">
                                     <?php endif; ?>
                                 </div>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <th scope="row">
+                                <label for="invoice_id_prefix"><?php _e('Invoice ID Prefix', 'invoice-creator'); ?></label>
+                            </th>
+                            <td>
+                                <input type="text" id="invoice_id_prefix" name="invoice_id_prefix"
+                                       value="<?php echo esc_attr($id_prefix); ?>"
+                                       class="regular-text" placeholder="INV">
+                                <p class="description">
+                                    <?php _e('This prefix will be added to all invoice IDs (e.g., "INV-001").', 'invoice-creator'); ?>
+                                </p>
                             </td>
                         </tr>
 

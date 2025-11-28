@@ -244,13 +244,17 @@ class Invoice_List_Page {
                                 <?php echo esc_html($total_due ? '$' . number_format((float)$total_due, 2) : '-'); ?>
                             </td>
                             <td class="column-status">
-                                <select class="invoice-status-select" data-invoice-id="<?php echo $invoice->ID; ?>" data-nonce="<?php echo wp_create_nonce('update_invoice_status_' . $invoice->ID); ?>">
-                                    <option value="new" <?php selected($status, 'new'); ?>><?php _e('New', 'invoice-creator'); ?></option>
-                                    <option value="sent" <?php selected($status, 'sent'); ?>><?php _e('Sent', 'invoice-creator'); ?></option>
-                                    <option value="paid" <?php selected($status, 'paid'); ?>><?php _e('Paid', 'invoice-creator'); ?></option>
-                                    <option value="overdue" <?php selected($status, 'overdue'); ?>><?php _e('Overdue', 'invoice-creator'); ?></option>
-                                    <option value="cancelled" <?php selected($status, 'cancelled'); ?>><?php _e('Cancelled', 'invoice-creator'); ?></option>
-                                </select>
+                                <?php if ($invoice->post_status === 'draft'): ?>
+                                    <span style="background-color: #999; color: #fff; padding: 4px 10px; border-radius: 3px; font-size: 12px; display: inline-block;"><?php _e('DRAFT', 'invoice-creator'); ?></span>
+                                <?php else: ?>
+                                    <select class="invoice-status-select" data-invoice-id="<?php echo $invoice->ID; ?>" data-nonce="<?php echo wp_create_nonce('update_invoice_status_' . $invoice->ID); ?>">
+                                        <option value="new" <?php selected($status, 'new'); ?>><?php _e('New', 'invoice-creator'); ?></option>
+                                        <option value="sent" <?php selected($status, 'sent'); ?>><?php _e('Sent', 'invoice-creator'); ?></option>
+                                        <option value="paid" <?php selected($status, 'paid'); ?>><?php _e('Paid', 'invoice-creator'); ?></option>
+                                        <option value="overdue" <?php selected($status, 'overdue'); ?>><?php _e('Overdue', 'invoice-creator'); ?></option>
+                                        <option value="cancelled" <?php selected($status, 'cancelled'); ?>><?php _e('Cancelled', 'invoice-creator'); ?></option>
+                                    </select>
+                                <?php endif; ?>
                             </td>
                             <td class="column-actions">
                                 <div class="invoice-actions">
@@ -347,7 +351,13 @@ class Invoice_List_Page {
 
             // Generate new invoice number
             $next_number = get_option('invoice_creator_next_number', 1);
-            $invoice_number = 'INV-' . str_pad($next_number, 4, '0', STR_PAD_LEFT);
+            $prefix = get_option('invoice_creator_id_prefix', '');
+            $formatted_number = str_pad($next_number, 3, '0', STR_PAD_LEFT);
+            if (!empty($prefix)) {
+                $invoice_number = $prefix . '-' . $formatted_number;
+            } else {
+                $invoice_number = 'INV-' . $formatted_number;
+            }
             update_post_meta($new_post_id, '_invoice_number', $invoice_number);
             update_option('invoice_creator_next_number', $next_number + 1);
 
