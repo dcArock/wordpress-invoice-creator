@@ -96,7 +96,7 @@ A simple and professional WordPress plugin to create, manage, and print invoices
 
 ## Technical Details
 
-- **Version**: 1.0
+- **Version**: 1.10
 - **Author**: Chris Arock
 - **Author URI**: https://dcarock.com
 - **Plugin URI**: https://dcarock.com/wordpress
@@ -130,6 +130,21 @@ For issues, questions, or feature requests, please visit:
 - Email: support@dcarock.com
 
 ## Changelog
+
+### 1.10
+- **Fixed**: Invoice save/create buttons now work correctly
+- **Improved**: Rewritten button logic for better handling of draft and published invoices
+- **Enhanced**: When creating/updating an invoice, it now opens in a new window for printing AND redirects the main window to All Invoices page
+- **Enhanced**: Button labels now change based on invoice state:
+  - New invoice: "Save as Draft" / "Create Invoice"
+  - Draft invoice: "Update Draft" / "Publish Invoice"
+  - Published invoice: "Update and Save as Draft" / "Update Invoice"
+
+### 1.9.2
+- UI/UX improvements
+
+### 1.9.1
+- Add automatic rewrite flush on version update
 
 ### 1.0
 - Initial release
