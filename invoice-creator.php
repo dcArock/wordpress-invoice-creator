@@ -3,7 +3,7 @@
  * Plugin Name: Invoice Creator
  * Plugin URI: https://dcarock.com/wordpress
  * Description: A simple WordPress plugin to create, manage, and print professional invoices.
- * Version: 1.2
+ * Version: 1.4
  * Author: Chris Arock
  * Author URI: https://dcarock.com
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('INVOICE_CREATOR_VERSION', '1.2');
+define('INVOICE_CREATOR_VERSION', '1.4');
 define('INVOICE_CREATOR_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('INVOICE_CREATOR_PLUGIN_URL', plugin_dir_url(__FILE__));
 
@@ -26,6 +26,7 @@ require_once INVOICE_CREATOR_PLUGIN_DIR . 'includes/class-invoice-post-type.php'
 require_once INVOICE_CREATOR_PLUGIN_DIR . 'includes/class-invoice-settings.php';
 require_once INVOICE_CREATOR_PLUGIN_DIR . 'includes/class-invoice-meta-boxes.php';
 require_once INVOICE_CREATOR_PLUGIN_DIR . 'includes/class-invoice-print.php';
+require_once INVOICE_CREATOR_PLUGIN_DIR . 'includes/class-invoice-list.php';
 
 /**
  * Main plugin class
@@ -60,6 +61,7 @@ class Invoice_Creator {
         Invoice_Settings::get_instance();
         Invoice_Meta_Boxes::get_instance();
         Invoice_Print::get_instance();
+        Invoice_List_Page::get_instance();
 
         // Enqueue admin scripts and styles
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_assets'));

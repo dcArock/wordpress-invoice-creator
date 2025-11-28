@@ -63,10 +63,6 @@
     font-size: 14px;
 }
 
-.invoice-field input[readonly] {
-    background-color: #f6f7f7;
-    cursor: not-allowed;
-}
 
 .invoice-field .description {
     margin-top: 6px;
@@ -168,10 +164,27 @@
     padding: 16px;
 }
 
-#invoice-totals .invoice-field input {
-    font-size: 16px;
+.invoice-totals-inline {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+}
+
+.invoice-totals-inline .invoice-field {
+    margin-bottom: 0;
+}
+
+.invoice-totals-inline .invoice-field label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #50575e;
+}
+
+.invoice-totals-inline .invoice-field input {
+    font-size: 14px;
     font-weight: 600;
-    padding: 10px 12px;
+    padding: 8px 10px;
 }
 
 /* Custom buttons styling */
