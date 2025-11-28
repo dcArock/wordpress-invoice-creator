@@ -22,6 +22,7 @@ class Invoice_Meta_Boxes {
         add_action('add_meta_boxes', array($this, 'add_meta_boxes'));
         add_action('save_post_invoice', array($this, 'save_invoice_meta'), 10, 2);
         add_action('admin_footer', array($this, 'render_custom_buttons'));
+        add_filter('redirect_post_location', array($this, 'redirect_after_create'), 10, 2);
     }
 
     /**
@@ -94,8 +95,8 @@ class Invoice_Meta_Boxes {
             <label for="invoice_number"><?php _e('Invoice Number', 'invoice-creator'); ?></label>
             <input type="text" id="invoice_number" name="invoice_number"
                    value="<?php echo esc_attr($invoice_number); ?>"
-                   class="widefat" readonly>
-            <p class="description"><?php _e('Auto-generated', 'invoice-creator'); ?></p>
+                   class="widefat">
+            <p class="description"><?php _e('Auto-increments by default, but you can edit it', 'invoice-creator'); ?></p>
         </div>
 
         <div class="invoice-field">
@@ -246,28 +247,29 @@ class Invoice_Meta_Boxes {
         $amount_paid = get_post_meta($post->ID, '_invoice_amount_paid', true);
         $total_due = get_post_meta($post->ID, '_invoice_total_due', true);
         ?>
-        <div class="invoice-field">
-            <label for="invoice_total"><?php _e('Total Amount', 'invoice-creator'); ?></label>
-            <input type="number" id="invoice_total" name="invoice_total"
-                   value="<?php echo esc_attr($total); ?>"
-                   step="0.01" min="0" class="widefat">
-            <p class="description"><?php _e('Auto-calculated from line items (editable)', 'invoice-creator'); ?></p>
-        </div>
+        <div class="invoice-totals-inline">
+            <div class="invoice-field">
+                <label for="invoice_total"><?php _e('Total', 'invoice-creator'); ?></label>
+                <input type="number" id="invoice_total" name="invoice_total"
+                       value="<?php echo esc_attr($total); ?>"
+                       step="0.01" min="0" class="widefat">
+            </div>
 
-        <div class="invoice-field">
-            <label for="invoice_amount_paid"><?php _e('Amount Already Paid', 'invoice-creator'); ?></label>
-            <input type="number" id="invoice_amount_paid" name="invoice_amount_paid"
-                   value="<?php echo esc_attr($amount_paid); ?>"
-                   step="0.01" min="0" class="widefat">
-        </div>
+            <div class="invoice-field">
+                <label for="invoice_amount_paid"><?php _e('Paid', 'invoice-creator'); ?></label>
+                <input type="number" id="invoice_amount_paid" name="invoice_amount_paid"
+                       value="<?php echo esc_attr($amount_paid); ?>"
+                       step="0.01" min="0" class="widefat">
+            </div>
 
-        <div class="invoice-field">
-            <label for="invoice_total_due"><?php _e('Total Due', 'invoice-creator'); ?></label>
-            <input type="number" id="invoice_total_due" name="invoice_total_due"
-                   value="<?php echo esc_attr($total_due); ?>"
-                   step="0.01" min="0" class="widefat">
-            <p class="description"><?php _e('Auto-calculated (editable)', 'invoice-creator'); ?></p>
+            <div class="invoice-field">
+                <label for="invoice_total_due"><?php _e('Due', 'invoice-creator'); ?></label>
+                <input type="number" id="invoice_total_due" name="invoice_total_due"
+                       value="<?php echo esc_attr($total_due); ?>"
+                       step="0.01" min="0" class="widefat">
+            </div>
         </div>
+        <p class="description" style="margin-top: 10px;"><?php _e('Auto-calculated (editable)', 'invoice-creator'); ?></p>
         <?php
     }
 
@@ -291,13 +293,19 @@ class Invoice_Meta_Boxes {
             return;
         }
 
-        // Generate invoice number if new
-        $invoice_number = get_post_meta($post_id, '_invoice_number', true);
-        if (empty($invoice_number)) {
-            $next_number = get_option('invoice_creator_next_number', 1);
-            $invoice_number = 'INV-' . str_pad($next_number, 4, '0', STR_PAD_LEFT);
-            update_post_meta($post_id, '_invoice_number', $invoice_number);
-            update_option('invoice_creator_next_number', $next_number + 1);
+        // Generate or save invoice number
+        if (isset($_POST['invoice_number']) && !empty($_POST['invoice_number'])) {
+            // User provided or edited invoice number
+            update_post_meta($post_id, '_invoice_number', sanitize_text_field($_POST['invoice_number']));
+        } else {
+            // Auto-generate if empty
+            $invoice_number = get_post_meta($post_id, '_invoice_number', true);
+            if (empty($invoice_number)) {
+                $next_number = get_option('invoice_creator_next_number', 1);
+                $invoice_number = 'INV-' . str_pad($next_number, 4, '0', STR_PAD_LEFT);
+                update_post_meta($post_id, '_invoice_number', $invoice_number);
+                update_option('invoice_creator_next_number', $next_number + 1);
+            }
         }
 
         // Save invoice details
@@ -390,14 +398,8 @@ class Invoice_Meta_Boxes {
                 '<button type="button" class="button button-large" id="save-draft-btn" style="margin-right:10px;">' +
                 '<?php _e('Save as Draft', 'invoice-creator'); ?></button>' +
                 '<button type="button" class="button button-primary button-large" id="create-invoice-btn">' +
-                '<?php _e('Create Invoice', 'invoice-creator'); ?></button>';
-
-            <?php if (!empty($post->ID) && get_post_status($post->ID) !== 'auto-draft'): ?>
-                customButtons += '<button type="button" class="button button-large" id="print-invoice-btn" style="margin-left:10px;">' +
-                '<?php _e('Print Invoice', 'invoice-creator'); ?></button>';
-            <?php endif; ?>
-
-            customButtons += '</div>';
+                '<?php _e('Create Invoice', 'invoice-creator'); ?></button>' +
+                '</div>';
 
             $('#invoice-totals').after(customButtons);
 
@@ -412,13 +414,24 @@ class Invoice_Meta_Boxes {
                 $('#invoice_action').val('create');
                 $('#post').submit();
             });
-
-            // Print invoice
-            $('#print-invoice-btn').on('click', function() {
-                window.open('<?php echo add_query_arg('print', '1', get_permalink($post->ID)); ?>', '_blank');
-            });
         });
         </script>
         <?php
+    }
+
+    /**
+     * Redirect after creating invoice
+     */
+    public function redirect_after_create($location, $post_id) {
+        if (get_post_type($post_id) !== 'invoice') {
+            return $location;
+        }
+
+        if (isset($_POST['invoice_action']) && $_POST['invoice_action'] === 'create') {
+            // Redirect to the print view
+            $location = add_query_arg('print', '1', get_permalink($post_id));
+        }
+
+        return $location;
     }
 }

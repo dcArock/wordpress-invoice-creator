@@ -106,7 +106,7 @@ class Invoice_Print {
                 }
 
                 .company-logo {
-                    max-width: 120px;
+                    max-width: 150px;
                     max-height: 200px;
                     height: auto;
                     margin-bottom: 15px;

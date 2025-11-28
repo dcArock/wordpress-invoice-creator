@@ -1,0 +1,287 @@
+<?php
+/**
+ * Invoice List Page Class
+ */
+
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+class Invoice_List_Page {
+
+    private static $instance = null;
+
+    public static function get_instance() {
+        if (null === self::$instance) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+
+    private function __construct() {
+        add_action('admin_menu', array($this, 'add_menu_page'));
+        add_action('admin_post_duplicate_invoice', array($this, 'duplicate_invoice'));
+        add_action('admin_post_delete_invoice', array($this, 'delete_invoice'));
+        add_action('admin_enqueue_scripts', array($this, 'enqueue_assets'));
+    }
+
+    /**
+     * Add menu page
+     */
+    public function add_menu_page() {
+        add_submenu_page(
+            'edit.php?post_type=invoice',
+            __('All Invoices', 'invoice-creator'),
+            __('All Invoices', 'invoice-creator'),
+            'edit_posts',
+            'all-invoices',
+            array($this, 'render_page')
+        );
+    }
+
+    /**
+     * Enqueue assets
+     */
+    public function enqueue_assets($hook) {
+        if ($hook !== 'invoice_page_all-invoices') {
+            return;
+        }
+
+        wp_enqueue_style(
+            'invoice-list-page',
+            INVOICE_CREATOR_PLUGIN_URL . 'assets/css/invoice-list.css',
+            array(),
+            INVOICE_CREATOR_VERSION
+        );
+    }
+
+    /**
+     * Render the page
+     */
+    public function render_page() {
+        // Handle messages
+        $message = '';
+        if (isset($_GET['duplicated']) && $_GET['duplicated'] === '1') {
+            $message = '<div class="notice notice-success is-dismissible"><p>' . __('Invoice duplicated successfully.', 'invoice-creator') . '</p></div>';
+        }
+        if (isset($_GET['deleted']) && $_GET['deleted'] === '1') {
+            $message = '<div class="notice notice-success is-dismissible"><p>' . __('Invoice deleted successfully.', 'invoice-creator') . '</p></div>';
+        }
+
+        // Get all invoices
+        $args = array(
+            'post_type' => 'invoice',
+            'posts_per_page' => -1,
+            'post_status' => array('publish', 'draft'),
+            'orderby' => 'date',
+            'order' => 'DESC'
+        );
+
+        $invoices = get_posts($args);
+        ?>
+        <div class="wrap">
+            <h1 class="wp-heading-inline"><?php _e('All Invoices', 'invoice-creator'); ?></h1>
+            <a href="<?php echo admin_url('post-new.php?post_type=invoice'); ?>" class="page-title-action"><?php _e('Add New', 'invoice-creator'); ?></a>
+            <hr class="wp-header-end">
+
+            <?php echo $message; ?>
+
+            <?php if (empty($invoices)): ?>
+                <div class="no-invoices">
+                    <p><?php _e('No invoices found. Create your first invoice!', 'invoice-creator'); ?></p>
+                    <a href="<?php echo admin_url('post-new.php?post_type=invoice'); ?>" class="button button-primary"><?php _e('Create Invoice', 'invoice-creator'); ?></a>
+                </div>
+            <?php else: ?>
+                <table class="wp-list-table widefat fixed striped table-view-list invoices-table">
+                    <thead>
+                        <tr>
+                            <th scope="col" class="manage-column column-invoice-number"><?php _e('Invoice #', 'invoice-creator'); ?></th>
+                            <th scope="col" class="manage-column column-client"><?php _e('Client', 'invoice-creator'); ?></th>
+                            <th scope="col" class="manage-column column-date"><?php _e('Date', 'invoice-creator'); ?></th>
+                            <th scope="col" class="manage-column column-due-date"><?php _e('Due Date', 'invoice-creator'); ?></th>
+                            <th scope="col" class="manage-column column-total"><?php _e('Total', 'invoice-creator'); ?></th>
+                            <th scope="col" class="manage-column column-status"><?php _e('Status', 'invoice-creator'); ?></th>
+                            <th scope="col" class="manage-column column-actions"><?php _e('Actions', 'invoice-creator'); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($invoices as $invoice):
+                            $invoice_number = get_post_meta($invoice->ID, '_invoice_number', true);
+                            $client_name = get_post_meta($invoice->ID, '_invoice_client_name', true);
+                            $invoice_date = get_post_meta($invoice->ID, '_invoice_date', true);
+                            $due_date = get_post_meta($invoice->ID, '_invoice_due_date', true);
+                            $total_due = get_post_meta($invoice->ID, '_invoice_total_due', true);
+                            $status = get_post_meta($invoice->ID, '_invoice_status', true);
+                            $status = $status ? $status : 'draft';
+
+                            $status_labels = array(
+                                'draft' => __('Draft', 'invoice-creator'),
+                                'sent' => __('Sent', 'invoice-creator'),
+                                'paid' => __('Paid', 'invoice-creator'),
+                            );
+
+                            // Format dates
+                            if ($invoice_date) {
+                                $invoice_date = date('M d, Y', strtotime($invoice_date));
+                            }
+                            if ($due_date) {
+                                $due_date = date('M d, Y', strtotime($due_date));
+                            }
+                        ?>
+                        <tr>
+                            <td class="column-invoice-number">
+                                <strong><?php echo esc_html($invoice_number); ?></strong>
+                            </td>
+                            <td class="column-client">
+                                <?php echo esc_html($client_name ? $client_name : '-'); ?>
+                            </td>
+                            <td class="column-date">
+                                <?php echo esc_html($invoice_date ? $invoice_date : '-'); ?>
+                            </td>
+                            <td class="column-due-date">
+                                <?php echo esc_html($due_date ? $due_date : '-'); ?>
+                            </td>
+                            <td class="column-total">
+                                <?php echo esc_html($total_due ? '$' . number_format((float)$total_due, 2) : '-'); ?>
+                            </td>
+                            <td class="column-status">
+                                <span class="invoice-status invoice-status-<?php echo esc_attr($status); ?>">
+                                    <?php echo esc_html($status_labels[$status]); ?>
+                                </span>
+                            </td>
+                            <td class="column-actions">
+                                <div class="invoice-actions">
+                                    <a href="<?php echo add_query_arg('print', '1', get_permalink($invoice->ID)); ?>"
+                                       class="button button-small"
+                                       target="_blank"
+                                       title="<?php _e('View Invoice', 'invoice-creator'); ?>">
+                                        <?php _e('View', 'invoice-creator'); ?>
+                                    </a>
+                                    <a href="<?php echo get_edit_post_link($invoice->ID); ?>"
+                                       class="button button-small"
+                                       title="<?php _e('Edit Invoice', 'invoice-creator'); ?>">
+                                        <?php _e('Edit', 'invoice-creator'); ?>
+                                    </a>
+                                    <a href="<?php echo wp_nonce_url(admin_url('admin-post.php?action=duplicate_invoice&invoice_id=' . $invoice->ID), 'duplicate_invoice_' . $invoice->ID); ?>"
+                                       class="button button-small"
+                                       title="<?php _e('Duplicate Invoice', 'invoice-creator'); ?>">
+                                        <?php _e('Duplicate', 'invoice-creator'); ?>
+                                    </a>
+                                    <a href="<?php echo wp_nonce_url(admin_url('admin-post.php?action=delete_invoice&invoice_id=' . $invoice->ID), 'delete_invoice_' . $invoice->ID); ?>"
+                                       class="button button-small button-link-delete"
+                                       onclick="return confirm('<?php _e('Are you sure you want to delete this invoice?', 'invoice-creator'); ?>');"
+                                       title="<?php _e('Delete Invoice', 'invoice-creator'); ?>">
+                                        <?php _e('Delete', 'invoice-creator'); ?>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php endif; ?>
+        </div>
+        <?php
+    }
+
+    /**
+     * Duplicate invoice
+     */
+    public function duplicate_invoice() {
+        if (!isset($_GET['invoice_id']) || !isset($_GET['_wpnonce'])) {
+            wp_die(__('Invalid request.', 'invoice-creator'));
+        }
+
+        $invoice_id = intval($_GET['invoice_id']);
+
+        if (!wp_verify_nonce($_GET['_wpnonce'], 'duplicate_invoice_' . $invoice_id)) {
+            wp_die(__('Security check failed.', 'invoice-creator'));
+        }
+
+        if (!current_user_can('edit_posts')) {
+            wp_die(__('You do not have permission to duplicate invoices.', 'invoice-creator'));
+        }
+
+        $original_post = get_post($invoice_id);
+
+        if (!$original_post || $original_post->post_type !== 'invoice') {
+            wp_die(__('Invoice not found.', 'invoice-creator'));
+        }
+
+        // Create duplicate
+        $new_post = array(
+            'post_title' => $original_post->post_title . ' (Copy)',
+            'post_status' => 'draft',
+            'post_type' => 'invoice',
+        );
+
+        $new_post_id = wp_insert_post($new_post);
+
+        if ($new_post_id) {
+            // Copy all meta data
+            $meta_keys = array(
+                '_invoice_date',
+                '_invoice_due_date',
+                '_invoice_client_name',
+                '_invoice_client_email',
+                '_invoice_client_phone',
+                '_invoice_client_address',
+                '_invoice_notes',
+                '_invoice_line_items',
+                '_invoice_total',
+                '_invoice_amount_paid',
+                '_invoice_total_due',
+                '_invoice_status'
+            );
+
+            foreach ($meta_keys as $key) {
+                $value = get_post_meta($invoice_id, $key, true);
+                if ($value) {
+                    update_post_meta($new_post_id, $key, $value);
+                }
+            }
+
+            // Generate new invoice number
+            $next_number = get_option('invoice_creator_next_number', 1);
+            $invoice_number = 'INV-' . str_pad($next_number, 4, '0', STR_PAD_LEFT);
+            update_post_meta($new_post_id, '_invoice_number', $invoice_number);
+            update_option('invoice_creator_next_number', $next_number + 1);
+
+            // Redirect to edit page
+            wp_redirect(admin_url('post.php?action=edit&post=' . $new_post_id . '&duplicated=1'));
+            exit;
+        } else {
+            wp_die(__('Failed to duplicate invoice.', 'invoice-creator'));
+        }
+    }
+
+    /**
+     * Delete invoice
+     */
+    public function delete_invoice() {
+        if (!isset($_GET['invoice_id']) || !isset($_GET['_wpnonce'])) {
+            wp_die(__('Invalid request.', 'invoice-creator'));
+        }
+
+        $invoice_id = intval($_GET['invoice_id']);
+
+        if (!wp_verify_nonce($_GET['_wpnonce'], 'delete_invoice_' . $invoice_id)) {
+            wp_die(__('Security check failed.', 'invoice-creator'));
+        }
+
+        if (!current_user_can('delete_posts')) {
+            wp_die(__('You do not have permission to delete invoices.', 'invoice-creator'));
+        }
+
+        $post = get_post($invoice_id);
+
+        if (!$post || $post->post_type !== 'invoice') {
+            wp_die(__('Invoice not found.', 'invoice-creator'));
+        }
+
+        wp_delete_post($invoice_id, true);
+
+        wp_redirect(admin_url('edit.php?post_type=invoice&page=all-invoices&deleted=1'));
+        exit;
+    }
+}
