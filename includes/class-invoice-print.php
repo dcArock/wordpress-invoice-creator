@@ -407,12 +407,6 @@ class Invoice_Print {
                 </div>
                 <?php endif; ?>
             </div>
-
-            <script>
-                window.onload = function() {
-                    window.print();
-                };
-            </script>
         </body>
         </html>
         <?php

@@ -22,6 +22,7 @@ class Invoice_List_Page {
         add_action('admin_menu', array($this, 'add_menu_page'));
         add_action('admin_post_duplicate_invoice', array($this, 'duplicate_invoice'));
         add_action('admin_post_delete_invoice', array($this, 'delete_invoice'));
+        add_action('admin_post_update_invoice_status', array($this, 'update_invoice_status'));
         add_action('admin_enqueue_scripts', array($this, 'enqueue_assets'));
     }
 
@@ -53,6 +54,14 @@ class Invoice_List_Page {
             array(),
             INVOICE_CREATOR_VERSION
         );
+
+        wp_enqueue_script(
+            'invoice-list-page',
+            INVOICE_CREATOR_PLUGIN_URL . 'assets/js/invoice-list.js',
+            array('jquery'),
+            INVOICE_CREATOR_VERSION,
+            true
+        );
     }
 
     /**
@@ -67,15 +76,53 @@ class Invoice_List_Page {
         if (isset($_GET['deleted']) && $_GET['deleted'] === '1') {
             $message = '<div class="notice notice-success is-dismissible"><p>' . __('Invoice deleted successfully.', 'invoice-creator') . '</p></div>';
         }
+        if (isset($_GET['status_updated']) && $_GET['status_updated'] === '1') {
+            $message = '<div class="notice notice-success is-dismissible"><p>' . __('Invoice status updated successfully.', 'invoice-creator') . '</p></div>';
+        }
 
-        // Get all invoices
+        // Get filter and search parameters
+        $current_status = isset($_GET['invoice_status']) ? sanitize_text_field($_GET['invoice_status']) : '';
+        $search_client = isset($_GET['s']) ? sanitize_text_field($_GET['s']) : '';
+        $orderby = isset($_GET['orderby']) ? sanitize_text_field($_GET['orderby']) : 'date';
+        $order = isset($_GET['order']) ? sanitize_text_field($_GET['order']) : 'DESC';
+
+        // Build query args
         $args = array(
             'post_type' => 'invoice',
             'posts_per_page' => -1,
             'post_status' => array('publish', 'draft'),
-            'orderby' => 'date',
-            'order' => 'DESC'
+            'orderby' => $orderby === 'invoice_number' ? 'meta_value' : $orderby,
+            'order' => $order
         );
+
+        if ($orderby === 'invoice_number') {
+            $args['meta_key'] = '_invoice_number';
+        }
+
+        // Add meta query for status filter
+        if (!empty($current_status)) {
+            $args['meta_query'] = array(
+                array(
+                    'key' => '_invoice_status',
+                    'value' => $current_status,
+                    'compare' => '='
+                )
+            );
+        }
+
+        // Add meta query for client search
+        if (!empty($search_client)) {
+            if (isset($args['meta_query'])) {
+                $args['meta_query']['relation'] = 'AND';
+            } else {
+                $args['meta_query'] = array();
+            }
+            $args['meta_query'][] = array(
+                'key' => '_invoice_client_name',
+                'value' => $search_client,
+                'compare' => 'LIKE'
+            );
+        }
 
         $invoices = get_posts($args);
         ?>
@@ -86,18 +133,51 @@ class Invoice_List_Page {
 
             <?php echo $message; ?>
 
+            <div class="tablenav top">
+                <div class="alignleft actions">
+                    <label for="filter-by-status" class="screen-reader-text"><?php _e('Filter by status', 'invoice-creator'); ?></label>
+                    <select name="invoice_status" id="filter-by-status">
+                        <option value=""><?php _e('All statuses', 'invoice-creator'); ?></option>
+                        <option value="new" <?php selected($current_status, 'new'); ?>><?php _e('New', 'invoice-creator'); ?></option>
+                        <option value="sent" <?php selected($current_status, 'sent'); ?>><?php _e('Sent', 'invoice-creator'); ?></option>
+                        <option value="paid" <?php selected($current_status, 'paid'); ?>><?php _e('Paid', 'invoice-creator'); ?></option>
+                        <option value="overdue" <?php selected($current_status, 'overdue'); ?>><?php _e('Overdue', 'invoice-creator'); ?></option>
+                        <option value="cancelled" <?php selected($current_status, 'cancelled'); ?>><?php _e('Cancelled', 'invoice-creator'); ?></option>
+                    </select>
+                    <input type="submit" name="filter_action" id="post-query-submit" class="button" value="<?php _e('Filter', 'invoice-creator'); ?>">
+                </div>
+                <div class="alignleft actions">
+                    <label for="search-client" class="screen-reader-text"><?php _e('Search clients', 'invoice-creator'); ?></label>
+                    <input type="search" id="search-client" name="s" value="<?php echo esc_attr($search_client); ?>" placeholder="<?php _e('Search clients...', 'invoice-creator'); ?>">
+                    <input type="submit" id="search-submit" class="button" value="<?php _e('Search', 'invoice-creator'); ?>">
+                </div>
+            </div>
+
             <?php if (empty($invoices)): ?>
                 <div class="no-invoices">
                     <p><?php _e('No invoices found. Create your first invoice!', 'invoice-creator'); ?></p>
                     <a href="<?php echo admin_url('post-new.php?post_type=invoice'); ?>" class="button button-primary"><?php _e('Create Invoice', 'invoice-creator'); ?></a>
                 </div>
             <?php else: ?>
+                <form method="get" action="<?php echo admin_url('edit.php'); ?>">
+                    <input type="hidden" name="post_type" value="invoice">
+                    <input type="hidden" name="page" value="all-invoices">
                 <table class="wp-list-table widefat fixed striped table-view-list invoices-table">
                     <thead>
                         <tr>
-                            <th scope="col" class="manage-column column-invoice-number"><?php _e('Invoice #', 'invoice-creator'); ?></th>
+                            <th scope="col" class="manage-column column-invoice-number sortable <?php echo $orderby === 'invoice_number' ? 'sorted' : 'desc'; ?> <?php echo $orderby === 'invoice_number' ? strtolower($order) : ''; ?>">
+                                <a href="<?php echo add_query_arg(array('orderby' => 'invoice_number', 'order' => $orderby === 'invoice_number' && $order === 'ASC' ? 'DESC' : 'ASC')); ?>">
+                                    <span><?php _e('Invoice #', 'invoice-creator'); ?></span>
+                                    <span class="sorting-indicator"></span>
+                                </a>
+                            </th>
                             <th scope="col" class="manage-column column-client"><?php _e('Client', 'invoice-creator'); ?></th>
-                            <th scope="col" class="manage-column column-date"><?php _e('Date', 'invoice-creator'); ?></th>
+                            <th scope="col" class="manage-column column-date sortable <?php echo $orderby === 'date' ? 'sorted' : 'desc'; ?> <?php echo $orderby === 'date' ? strtolower($order) : ''; ?>">
+                                <a href="<?php echo add_query_arg(array('orderby' => 'date', 'order' => $orderby === 'date' && $order === 'ASC' ? 'DESC' : 'ASC')); ?>">
+                                    <span><?php _e('Date', 'invoice-creator'); ?></span>
+                                    <span class="sorting-indicator"></span>
+                                </a>
+                            </th>
                             <th scope="col" class="manage-column column-due-date"><?php _e('Due Date', 'invoice-creator'); ?></th>
                             <th scope="col" class="manage-column column-total"><?php _e('Total', 'invoice-creator'); ?></th>
                             <th scope="col" class="manage-column column-status"><?php _e('Status', 'invoice-creator'); ?></th>
@@ -112,13 +192,7 @@ class Invoice_List_Page {
                             $due_date = get_post_meta($invoice->ID, '_invoice_due_date', true);
                             $total_due = get_post_meta($invoice->ID, '_invoice_total_due', true);
                             $status = get_post_meta($invoice->ID, '_invoice_status', true);
-                            $status = $status ? $status : 'draft';
-
-                            $status_labels = array(
-                                'draft' => __('Draft', 'invoice-creator'),
-                                'sent' => __('Sent', 'invoice-creator'),
-                                'paid' => __('Paid', 'invoice-creator'),
-                            );
+                            $status = $status ? $status : 'new';
 
                             // Format dates
                             if ($invoice_date) {
@@ -145,9 +219,13 @@ class Invoice_List_Page {
                                 <?php echo esc_html($total_due ? '$' . number_format((float)$total_due, 2) : '-'); ?>
                             </td>
                             <td class="column-status">
-                                <span class="invoice-status invoice-status-<?php echo esc_attr($status); ?>">
-                                    <?php echo esc_html($status_labels[$status]); ?>
-                                </span>
+                                <select class="invoice-status-select" data-invoice-id="<?php echo $invoice->ID; ?>" data-nonce="<?php echo wp_create_nonce('update_invoice_status_' . $invoice->ID); ?>">
+                                    <option value="new" <?php selected($status, 'new'); ?>><?php _e('New', 'invoice-creator'); ?></option>
+                                    <option value="sent" <?php selected($status, 'sent'); ?>><?php _e('Sent', 'invoice-creator'); ?></option>
+                                    <option value="paid" <?php selected($status, 'paid'); ?>><?php _e('Paid', 'invoice-creator'); ?></option>
+                                    <option value="overdue" <?php selected($status, 'overdue'); ?>><?php _e('Overdue', 'invoice-creator'); ?></option>
+                                    <option value="cancelled" <?php selected($status, 'cancelled'); ?>><?php _e('Cancelled', 'invoice-creator'); ?></option>
+                                </select>
                             </td>
                             <td class="column-actions">
                                 <div class="invoice-actions">
@@ -179,6 +257,7 @@ class Invoice_List_Page {
                         <?php endforeach; ?>
                     </tbody>
                 </table>
+                </form>
             <?php endif; ?>
         </div>
         <?php
@@ -283,5 +362,40 @@ class Invoice_List_Page {
 
         wp_redirect(admin_url('edit.php?post_type=invoice&page=all-invoices&deleted=1'));
         exit;
+    }
+
+    /**
+     * Update invoice status
+     */
+    public function update_invoice_status() {
+        if (!isset($_POST['invoice_id']) || !isset($_POST['status']) || !isset($_POST['_wpnonce'])) {
+            wp_send_json_error(array('message' => __('Invalid request.', 'invoice-creator')));
+        }
+
+        $invoice_id = intval($_POST['invoice_id']);
+        $status = sanitize_text_field($_POST['status']);
+
+        if (!wp_verify_nonce($_POST['_wpnonce'], 'update_invoice_status_' . $invoice_id)) {
+            wp_send_json_error(array('message' => __('Security check failed.', 'invoice-creator')));
+        }
+
+        if (!current_user_can('edit_posts')) {
+            wp_send_json_error(array('message' => __('You do not have permission to update invoice status.', 'invoice-creator')));
+        }
+
+        $post = get_post($invoice_id);
+
+        if (!$post || $post->post_type !== 'invoice') {
+            wp_send_json_error(array('message' => __('Invoice not found.', 'invoice-creator')));
+        }
+
+        $allowed_statuses = array('new', 'sent', 'paid', 'overdue', 'cancelled');
+        if (!in_array($status, $allowed_statuses)) {
+            wp_send_json_error(array('message' => __('Invalid status.', 'invoice-creator')));
+        }
+
+        update_post_meta($invoice_id, '_invoice_status', $status);
+
+        wp_send_json_success(array('message' => __('Invoice status updated successfully.', 'invoice-creator')));
     }
 }

@@ -77,19 +77,69 @@
     text-transform: uppercase;
 }
 
-.invoice-status-draft {
-    background: #f0f0f1;
-    color: #50575e;
+.invoice-status-select {
+    padding: 4px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    border: 1px solid #ddd;
+    cursor: pointer;
 }
 
-.invoice-status-sent {
-    background: #d5e5f2;
-    color: #135e96;
+.invoice-status-select option[value="new"] {
+    background: #9ca3af;
+    color: #fff;
 }
 
-.invoice-status-paid {
-    background: #d4edda;
-    color: #155724;
+.invoice-status-select option[value="sent"] {
+    background: #3b82f6;
+    color: #fff;
+}
+
+.invoice-status-select option[value="paid"] {
+    background: #22c55e;
+    color: #fff;
+}
+
+.invoice-status-select option[value="overdue"] {
+    background: #ef4444;
+    color: #fff;
+}
+
+.invoice-status-select option[value="cancelled"] {
+    background: #4b5563;
+    color: #fff;
+}
+
+.invoice-status-select[data-status="new"] {
+    background: #9ca3af;
+    color: #fff;
+    border-color: #9ca3af;
+}
+
+.invoice-status-select[data-status="sent"] {
+    background: #3b82f6;
+    color: #fff;
+    border-color: #3b82f6;
+}
+
+.invoice-status-select[data-status="paid"] {
+    background: #22c55e;
+    color: #fff;
+    border-color: #22c55e;
+}
+
+.invoice-status-select[data-status="overdue"] {
+    background: #ef4444;
+    color: #fff;
+    border-color: #ef4444;
+}
+
+.invoice-status-select[data-status="cancelled"] {
+    background: #4b5563;
+    color: #fff;
+    border-color: #4b5563;
 }
 
 .no-invoices {
