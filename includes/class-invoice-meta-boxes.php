@@ -86,6 +86,13 @@ class Invoice_Meta_Boxes {
         $invoice_number = get_post_meta($post->ID, '_invoice_number', true);
         $invoice_date = get_post_meta($post->ID, '_invoice_date', true);
         $due_date = get_post_meta($post->ID, '_invoice_due_date', true);
+        $prefix = get_option('invoice_creator_id_prefix', '');
+
+        // Strip prefix from invoice number for display if present
+        $display_number = $invoice_number;
+        if (!empty($prefix) && !empty($invoice_number) && strpos($invoice_number, $prefix . '-') === 0) {
+            $display_number = substr($invoice_number, strlen($prefix) + 1);
+        }
 
         if (!$invoice_date) {
             $invoice_date = current_time('Y-m-d');
@@ -93,9 +100,14 @@ class Invoice_Meta_Boxes {
         ?>
         <div class="invoice-field">
             <label for="invoice_number"><?php _e('Invoice Number', 'invoice-creator'); ?></label>
-            <input type="text" id="invoice_number" name="invoice_number"
-                   value="<?php echo esc_attr($invoice_number); ?>"
-                   class="widefat">
+            <div style="display: flex; align-items: center; gap: 5px;">
+                <?php if (!empty($prefix)): ?>
+                    <span style="color: #999; font-size: 14px; padding: 6px 0;"><?php echo esc_html($prefix); ?>-</span>
+                <?php endif; ?>
+                <input type="text" id="invoice_number" name="invoice_number"
+                       value="<?php echo esc_attr($display_number); ?>"
+                       style="flex: 1;">
+            </div>
             <p class="description"><?php _e('Auto-increments by default, but you can edit it', 'invoice-creator'); ?></p>
         </div>
 
@@ -294,15 +306,27 @@ class Invoice_Meta_Boxes {
         }
 
         // Generate or save invoice number
+        $prefix = get_option('invoice_creator_id_prefix', '');
         if (isset($_POST['invoice_number']) && !empty($_POST['invoice_number'])) {
-            // User provided or edited invoice number
-            update_post_meta($post_id, '_invoice_number', sanitize_text_field($_POST['invoice_number']));
+            // User provided or edited invoice number - add prefix if not already present
+            $user_number = sanitize_text_field($_POST['invoice_number']);
+            if (!empty($prefix) && strpos($user_number, $prefix . '-') !== 0) {
+                $invoice_number = $prefix . '-' . $user_number;
+            } else {
+                $invoice_number = $user_number;
+            }
+            update_post_meta($post_id, '_invoice_number', $invoice_number);
         } else {
             // Auto-generate if empty
             $invoice_number = get_post_meta($post_id, '_invoice_number', true);
             if (empty($invoice_number)) {
                 $next_number = get_option('invoice_creator_next_number', 1);
-                $invoice_number = 'INV-' . str_pad($next_number, 4, '0', STR_PAD_LEFT);
+                $formatted_number = str_pad($next_number, 3, '0', STR_PAD_LEFT);
+                if (!empty($prefix)) {
+                    $invoice_number = $prefix . '-' . $formatted_number;
+                } else {
+                    $invoice_number = 'INV-' . $formatted_number;
+                }
                 update_post_meta($post_id, '_invoice_number', $invoice_number);
                 update_option('invoice_creator_next_number', $next_number + 1);
             }
@@ -370,7 +394,18 @@ class Invoice_Meta_Boxes {
         // Save status and update post status
         if (isset($_POST['invoice_action'])) {
             if ($_POST['invoice_action'] === 'create') {
-                update_post_meta($post_id, '_invoice_status', 'sent');
+                // Check if invoice is being published from draft
+                $current_post_status = get_post_status($post_id);
+                if ($current_post_status === 'draft') {
+                    // Publishing a draft - only set status to 'new' if it's currently 'draft'
+                    $current_status = get_post_meta($post_id, '_invoice_status', true);
+                    if ($current_status === 'draft' || empty($current_status)) {
+                        update_post_meta($post_id, '_invoice_status', 'new');
+                    }
+                } else {
+                    // New invoice being created - set status to 'new'
+                    update_post_meta($post_id, '_invoice_status', 'new');
+                }
                 // Set WordPress post status to published
                 wp_update_post(array(
                     'ID' => $post_id,
@@ -437,19 +472,26 @@ class Invoice_Meta_Boxes {
             return $location;
         }
 
-        // Check if this is a newly created invoice (not an update)
-        $is_new = get_post_meta($post_id, '_invoice_created', true);
+        if (isset($_POST['invoice_action'])) {
+            if ($_POST['invoice_action'] === 'create') {
+                // Check if this is a newly created invoice (not an update)
+                $is_new = get_post_meta($post_id, '_invoice_created', true);
 
-        if (isset($_POST['invoice_action']) && $_POST['invoice_action'] === 'create' && empty($is_new)) {
-            // Mark this invoice as created
-            update_post_meta($post_id, '_invoice_created', '1');
+                if (empty($is_new)) {
+                    // Mark this invoice as created
+                    update_post_meta($post_id, '_invoice_created', '1');
 
-            // Store the invoice URL in a transient to open in new tab
-            $invoice_url = add_query_arg('print', '1', get_permalink($post_id));
-            set_transient('invoice_created_' . get_current_user_id(), $invoice_url, 30);
+                    // Store the invoice URL in a transient to open in new tab
+                    $invoice_url = add_query_arg('print', '1', get_permalink($post_id));
+                    set_transient('invoice_created_' . get_current_user_id(), $invoice_url, 30);
+                }
 
-            // Redirect to All Invoices page
-            $location = admin_url('edit.php?post_type=invoice&page=all-invoices&invoice_created=1');
+                // Redirect to All Invoices page
+                $location = admin_url('edit.php?post_type=invoice&page=all-invoices&invoice_created=1');
+            } elseif ($_POST['invoice_action'] === 'draft') {
+                // Redirect to All Invoices page after saving as draft
+                $location = admin_url('edit.php?post_type=invoice&page=all-invoices');
+            }
         }
 
         return $location;
