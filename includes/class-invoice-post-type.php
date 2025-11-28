@@ -38,7 +38,7 @@ class Invoice_Post_Type {
             'new_item'              => __('New Invoice', 'invoice-creator'),
             'edit_item'             => __('Edit Invoice', 'invoice-creator'),
             'view_item'             => __('View Invoice', 'invoice-creator'),
-            'all_items'             => __('All Invoices', 'invoice-creator'),
+            'all_items'             => __('Add New', 'invoice-creator'),
             'search_items'          => __('Search Invoices', 'invoice-creator'),
             'not_found'             => __('No invoices found.', 'invoice-creator'),
             'not_found_in_trash'    => __('No invoices found in Trash.', 'invoice-creator'),
