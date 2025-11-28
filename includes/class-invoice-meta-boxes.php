@@ -391,7 +391,7 @@ class Invoice_Meta_Boxes {
             update_post_meta($post_id, '_invoice_total_due', floatval($_POST['invoice_total_due']));
         }
 
-        // Save status and update post status based on action
+        // Save invoice status based on action
         if (isset($_POST['invoice_action'])) {
             if ($_POST['invoice_action'] === 'create') {
                 // Publishing invoice - preserve existing status if not draft, otherwise set to 'new'
@@ -399,19 +399,9 @@ class Invoice_Meta_Boxes {
                 if ($current_status === 'draft' || empty($current_status)) {
                     update_post_meta($post_id, '_invoice_status', 'new');
                 }
-                // Set WordPress post status to published
-                wp_update_post(array(
-                    'ID' => $post_id,
-                    'post_status' => 'publish'
-                ));
             } elseif ($_POST['invoice_action'] === 'draft') {
                 // Saving as draft
                 update_post_meta($post_id, '_invoice_status', 'draft');
-                // Set WordPress post status to draft
-                wp_update_post(array(
-                    'ID' => $post_id,
-                    'post_status' => 'draft'
-                ));
             }
         }
     }
@@ -450,9 +440,18 @@ class Invoice_Meta_Boxes {
             // Hide default publish box
             $('#submitdiv').hide();
 
+            // Add hidden input for invoice action
+            if ($('#invoice_action').length === 0) {
+                $('<input>').attr({
+                    type: 'hidden',
+                    id: 'invoice_action',
+                    name: 'invoice_action',
+                    value: ''
+                }).appendTo('#post');
+            }
+
             // Add custom buttons container
             var customButtons = '<div id="invoice-custom-buttons" style="clear:both; padding-top:20px;">' +
-                '<input type="hidden" name="invoice_action" id="invoice_action" value="">' +
                 '<button type="button" class="button button-large" id="save-draft-btn" style="margin-right:10px;">' +
                 '<?php echo esc_js($button1_label); ?></button>' +
                 '<button type="button" class="button button-primary button-large" id="create-invoice-btn">' +
@@ -464,15 +463,40 @@ class Invoice_Meta_Boxes {
             // Button 1: Save/Update as Draft
             $('#save-draft-btn').on('click', function(e) {
                 e.preventDefault();
+                console.log('Save as draft clicked');
+
+                // Set the invoice action
                 $('#invoice_action').val('draft');
-                $('#post').submit();
+
+                // Set post status to draft
+                $('#post_status').val('draft');
+                $('#hidden_post_status').val('draft');
+
+                // Disable the button to prevent double-clicking
+                $(this).prop('disabled', true).text('Saving...');
+
+                // Submit the form using native JavaScript
+                document.getElementById('post').submit();
             });
 
             // Button 2: Create/Publish/Update Invoice
             $('#create-invoice-btn').on('click', function(e) {
                 e.preventDefault();
+                console.log('Create invoice clicked');
+
+                // Set the invoice action
                 $('#invoice_action').val('create');
-                $('#post').submit();
+
+                // Set post status to publish
+                $('#post_status').val('publish');
+                $('#hidden_post_status').val('publish');
+                $('#original_post_status').val('publish');
+
+                // Disable the button to prevent double-clicking
+                $(this).prop('disabled', true).text('Processing...');
+
+                // Submit the form using native JavaScript
+                document.getElementById('post').submit();
             });
         });
         </script>

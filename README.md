@@ -96,7 +96,7 @@ A simple and professional WordPress plugin to create, manage, and print invoices
 
 ## Technical Details
 
-- **Version**: 1.10
+- **Version**: 1.11
 - **Author**: Chris Arock
 - **Author URI**: https://dcarock.com
 - **Plugin URI**: https://dcarock.com/wordpress
@@ -130,6 +130,12 @@ For issues, questions, or feature requests, please visit:
 - Email: support@dcarock.com
 
 ## Changelog
+
+### 1.11
+- **Fixed**: Form submission now works properly using native JavaScript submit
+- **Fixed**: Removed wp_update_post() calls from save handler to prevent conflicts
+- **Improved**: Set WordPress post status fields directly before form submission
+- **Enhanced**: Added console logging for debugging button clicks
 
 ### 1.10
 - **Fixed**: Invoice save/create buttons now work correctly
