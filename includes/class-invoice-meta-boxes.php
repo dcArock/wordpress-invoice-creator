@@ -367,12 +367,22 @@ class Invoice_Meta_Boxes {
             update_post_meta($post_id, '_invoice_total_due', floatval($_POST['invoice_total_due']));
         }
 
-        // Save status
+        // Save status and update post status
         if (isset($_POST['invoice_action'])) {
             if ($_POST['invoice_action'] === 'create') {
                 update_post_meta($post_id, '_invoice_status', 'sent');
+                // Set WordPress post status to published
+                wp_update_post(array(
+                    'ID' => $post_id,
+                    'post_status' => 'publish'
+                ));
             } elseif ($_POST['invoice_action'] === 'draft') {
                 update_post_meta($post_id, '_invoice_status', 'draft');
+                // Set WordPress post status to draft
+                wp_update_post(array(
+                    'ID' => $post_id,
+                    'post_status' => 'draft'
+                ));
             }
         }
     }

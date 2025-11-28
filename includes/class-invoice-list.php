@@ -227,6 +227,9 @@ class Invoice_List_Page {
                         <tr>
                             <td class="column-invoice-number">
                                 <strong><?php echo esc_html($invoice_number); ?></strong>
+                                <?php if ($invoice->post_status === 'draft'): ?>
+                                    <span class="invoice-draft-badge" style="background-color: #ddd; color: #333; padding: 2px 8px; border-radius: 3px; font-size: 11px; margin-left: 8px; font-weight: normal;">Draft</span>
+                                <?php endif; ?>
                             </td>
                             <td class="column-client">
                                 <?php echo esc_html($client_name ? $client_name : '-'); ?>
