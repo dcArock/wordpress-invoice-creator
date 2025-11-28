@@ -391,19 +391,12 @@ class Invoice_Meta_Boxes {
             update_post_meta($post_id, '_invoice_total_due', floatval($_POST['invoice_total_due']));
         }
 
-        // Save status and update post status
+        // Save status and update post status based on action
         if (isset($_POST['invoice_action'])) {
             if ($_POST['invoice_action'] === 'create') {
-                // Check if invoice is being published from draft
-                $current_post_status = get_post_status($post_id);
-                if ($current_post_status === 'draft') {
-                    // Publishing a draft - only set status to 'new' if it's currently 'draft'
-                    $current_status = get_post_meta($post_id, '_invoice_status', true);
-                    if ($current_status === 'draft' || empty($current_status)) {
-                        update_post_meta($post_id, '_invoice_status', 'new');
-                    }
-                } else {
-                    // New invoice being created - set status to 'new'
+                // Publishing invoice - preserve existing status if not draft, otherwise set to 'new'
+                $current_status = get_post_meta($post_id, '_invoice_status', true);
+                if ($current_status === 'draft' || empty($current_status)) {
                     update_post_meta($post_id, '_invoice_status', 'new');
                 }
                 // Set WordPress post status to published
@@ -412,6 +405,7 @@ class Invoice_Meta_Boxes {
                     'post_status' => 'publish'
                 ));
             } elseif ($_POST['invoice_action'] === 'draft') {
+                // Saving as draft
                 update_post_meta($post_id, '_invoice_status', 'draft');
                 // Set WordPress post status to draft
                 wp_update_post(array(
@@ -431,38 +425,52 @@ class Invoice_Meta_Boxes {
         if ('invoice' !== $post_type) {
             return;
         }
+
+        // Determine invoice state
+        $post_status = $post->post_status;
+        $is_new = ($post_status === 'auto-draft' || empty($post->ID));
+        $is_draft = ($post_status === 'draft');
+        $is_published = ($post_status === 'publish');
+
+        // Determine button labels based on state
+        if ($is_new) {
+            $button1_label = __('Save as Draft', 'invoice-creator');
+            $button2_label = __('Create Invoice', 'invoice-creator');
+        } elseif ($is_draft) {
+            $button1_label = __('Update Draft', 'invoice-creator');
+            $button2_label = __('Publish Invoice', 'invoice-creator');
+        } else {
+            // Published invoice
+            $button1_label = __('Update and Save as Draft', 'invoice-creator');
+            $button2_label = __('Update Invoice', 'invoice-creator');
+        }
         ?>
         <script type="text/javascript">
         jQuery(document).ready(function($) {
             // Hide default publish box
             $('#submitdiv').hide();
 
-            // Check if this is a draft invoice
-            var postStatus = '<?php echo esc_js($post->post_status); ?>';
-            var isDraft = (postStatus === 'draft');
-
-            // Add custom buttons container with appropriate labels
-            var saveDraftLabel = isDraft ? '<?php _e('Update Draft', 'invoice-creator'); ?>' : '<?php _e('Save as Draft', 'invoice-creator'); ?>';
-            var createInvoiceLabel = isDraft ? '<?php _e('Publish Invoice', 'invoice-creator'); ?>' : '<?php _e('Create Invoice', 'invoice-creator'); ?>';
-
+            // Add custom buttons container
             var customButtons = '<div id="invoice-custom-buttons" style="clear:both; padding-top:20px;">' +
                 '<input type="hidden" name="invoice_action" id="invoice_action" value="">' +
                 '<button type="button" class="button button-large" id="save-draft-btn" style="margin-right:10px;">' +
-                saveDraftLabel + '</button>' +
+                '<?php echo esc_js($button1_label); ?></button>' +
                 '<button type="button" class="button button-primary button-large" id="create-invoice-btn">' +
-                createInvoiceLabel + '</button>' +
+                '<?php echo esc_js($button2_label); ?></button>' +
                 '</div>';
 
             $('#invoice-totals').after(customButtons);
 
-            // Save as draft
-            $('#save-draft-btn').on('click', function() {
+            // Button 1: Save/Update as Draft
+            $('#save-draft-btn').on('click', function(e) {
+                e.preventDefault();
                 $('#invoice_action').val('draft');
                 $('#post').submit();
             });
 
-            // Create invoice
-            $('#create-invoice-btn').on('click', function() {
+            // Button 2: Create/Publish/Update Invoice
+            $('#create-invoice-btn').on('click', function(e) {
+                e.preventDefault();
                 $('#invoice_action').val('create');
                 $('#post').submit();
             });
@@ -481,19 +489,11 @@ class Invoice_Meta_Boxes {
 
         if (isset($_POST['invoice_action'])) {
             if ($_POST['invoice_action'] === 'create') {
-                // Check if this is a newly created invoice (not an update)
-                $is_new = get_post_meta($post_id, '_invoice_created', true);
+                // Store the invoice URL in a transient to open in new tab
+                $invoice_url = add_query_arg('print', '1', get_permalink($post_id));
+                set_transient('invoice_created_' . get_current_user_id(), $invoice_url, 30);
 
-                if (empty($is_new)) {
-                    // Mark this invoice as created
-                    update_post_meta($post_id, '_invoice_created', '1');
-
-                    // Store the invoice URL in a transient to open in new tab
-                    $invoice_url = add_query_arg('print', '1', get_permalink($post_id));
-                    set_transient('invoice_created_' . get_current_user_id(), $invoice_url, 30);
-                }
-
-                // Redirect to All Invoices page
+                // Redirect to All Invoices page with parameter to trigger new window
                 $location = admin_url('edit.php?post_type=invoice&page=all-invoices&invoice_created=1');
             } elseif ($_POST['invoice_action'] === 'draft') {
                 // Redirect to All Invoices page after saving as draft
