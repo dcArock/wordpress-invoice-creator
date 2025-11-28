@@ -22,13 +22,15 @@ class Invoice_Post_Type {
         add_action('init', array($this, 'register_post_type'));
         add_filter('manage_invoice_posts_columns', array($this, 'set_custom_columns'));
         add_action('manage_invoice_posts_custom_column', array($this, 'custom_column_content'), 10, 2);
-        add_action('admin_menu', array($this, 'remove_add_new_submenu'), 999);
+        add_action('admin_menu', array($this, 'customize_submenu'), 999);
     }
 
     /**
-     * Remove the default "Add New" submenu
+     * Customize the submenu order and items
      */
-    public function remove_add_new_submenu() {
+    public function customize_submenu() {
+        // Remove the default "All Items" and "Add New" submenus
+        remove_submenu_page('edit.php?post_type=invoice', 'edit.php?post_type=invoice');
         remove_submenu_page('edit.php?post_type=invoice', 'post-new.php?post_type=invoice');
     }
 
@@ -41,12 +43,12 @@ class Invoice_Post_Type {
             'singular_name'         => _x('Invoice', 'Post type singular name', 'invoice-creator'),
             'menu_name'             => _x('Invoices', 'Admin Menu text', 'invoice-creator'),
             'name_admin_bar'        => _x('Invoice', 'Add New on Toolbar', 'invoice-creator'),
-            'add_new'               => __('Add New', 'invoice-creator'),
-            'add_new_item'          => __('Add New Invoice', 'invoice-creator'),
+            'add_new'               => __('Create New Invoice', 'invoice-creator'),
+            'add_new_item'          => __('Create New Invoice', 'invoice-creator'),
             'new_item'              => __('New Invoice', 'invoice-creator'),
             'edit_item'             => __('Edit Invoice', 'invoice-creator'),
             'view_item'             => __('View Invoice', 'invoice-creator'),
-            'all_items'             => __('Add New', 'invoice-creator'),
+            'all_items'             => __('All Invoices', 'invoice-creator'),
             'search_items'          => __('Search Invoices', 'invoice-creator'),
             'not_found'             => __('No invoices found.', 'invoice-creator'),
             'not_found_in_trash'    => __('No invoices found in Trash.', 'invoice-creator'),

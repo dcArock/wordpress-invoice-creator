@@ -19,7 +19,7 @@ class Invoice_Settings {
     }
 
     private function __construct() {
-        add_action('admin_menu', array($this, 'add_settings_page'));
+        add_action('admin_menu', array($this, 'add_settings_page'), 15);
         add_action('admin_init', array($this, 'register_settings'));
     }
 
@@ -47,7 +47,6 @@ class Invoice_Settings {
         register_setting('invoice_creator_settings', 'invoice_creator_company_website');
         register_setting('invoice_creator_settings', 'invoice_creator_company_address');
         register_setting('invoice_creator_settings', 'invoice_creator_company_logo');
-        register_setting('invoice_creator_settings', 'invoice_creator_next_number');
         register_setting('invoice_creator_settings', 'invoice_creator_id_prefix');
     }
 
@@ -69,7 +68,6 @@ class Invoice_Settings {
             update_option('invoice_creator_company_website', esc_url_raw($_POST['company_website']));
             update_option('invoice_creator_company_address', sanitize_textarea_field($_POST['company_address']));
             update_option('invoice_creator_company_logo', esc_url_raw($_POST['company_logo']));
-            update_option('invoice_creator_next_number', absint($_POST['next_invoice_number']));
             update_option('invoice_creator_id_prefix', sanitize_text_field($_POST['invoice_id_prefix']));
 
             echo '<div class="notice notice-success is-dismissible"><p>' .
@@ -83,7 +81,6 @@ class Invoice_Settings {
         $company_website = get_option('invoice_creator_company_website', '');
         $company_address = get_option('invoice_creator_company_address', '');
         $company_logo = get_option('invoice_creator_company_logo', '');
-        $next_number = get_option('invoice_creator_next_number', 1);
         $id_prefix = get_option('invoice_creator_id_prefix', '');
         ?>
 
@@ -182,20 +179,6 @@ class Invoice_Settings {
                                        class="regular-text" placeholder="INV">
                                 <p class="description">
                                     <?php _e('This prefix will be added to all invoice IDs (e.g., "INV-001").', 'invoice-creator'); ?>
-                                </p>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <th scope="row">
-                                <label for="next_invoice_number"><?php _e('Next Invoice Number', 'invoice-creator'); ?></label>
-                            </th>
-                            <td>
-                                <input type="number" id="next_invoice_number" name="next_invoice_number"
-                                       value="<?php echo esc_attr($next_number); ?>"
-                                       min="1" class="small-text">
-                                <p class="description">
-                                    <?php _e('The next invoice will use this number. This will auto-increment.', 'invoice-creator'); ?>
                                 </p>
                             </td>
                         </tr>
