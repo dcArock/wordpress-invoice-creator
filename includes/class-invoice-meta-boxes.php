@@ -513,8 +513,12 @@ class Invoice_Meta_Boxes {
 
         if (isset($_POST['invoice_action'])) {
             if ($_POST['invoice_action'] === 'create') {
-                // Store the invoice URL in a transient to open in new tab
-                $invoice_url = add_query_arg('print', '1', get_permalink($post_id));
+                // Build the invoice URL without HTML encoding
+                $permalink = get_permalink($post_id);
+                $separator = (strpos($permalink, '?') === false) ? '?' : '&';
+                $invoice_url = $permalink . $separator . 'print=1';
+
+                // Store in transient to open in new tab
                 set_transient('invoice_created_' . get_current_user_id(), $invoice_url, 30);
 
                 // Redirect to All Invoices page with parameter to trigger new window
