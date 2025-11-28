@@ -3,7 +3,7 @@
  * Plugin Name: Invoice Creator
  * Plugin URI: https://dcarock.com/wordpress
  * Description: A simple WordPress plugin to create, manage, and print professional invoices.
- * Version: 1.9
+ * Version: 1.9.1
  * Author: Chris Arock
  * Author URI: https://dcarock.com
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('INVOICE_CREATOR_VERSION', '1.9');
+define('INVOICE_CREATOR_VERSION', '1.9.1');
 define('INVOICE_CREATOR_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('INVOICE_CREATOR_PLUGIN_URL', plugin_dir_url(__FILE__));
 
@@ -68,6 +68,9 @@ class Invoice_Creator {
 
         // Add activation hook
         register_activation_hook(__FILE__, array($this, 'activate'));
+
+        // Check if rewrite rules need to be flushed after update
+        add_action('admin_init', array($this, 'check_version_update'));
     }
 
     /**
@@ -110,11 +113,26 @@ class Invoice_Creator {
     }
 
     /**
+     * Check if plugin version has been updated
+     */
+    public function check_version_update() {
+        $saved_version = get_option('invoice_creator_version', '0');
+
+        if (version_compare($saved_version, INVOICE_CREATOR_VERSION, '<')) {
+            // Version has been updated - flush rewrite rules to ensure permalinks work
+            // The post type is already registered by the init action, so just flush
+            flush_rewrite_rules();
+            update_option('invoice_creator_version', INVOICE_CREATOR_VERSION);
+        }
+    }
+
+    /**
      * Plugin activation
      */
     public function activate() {
-        // Register post type
-        Invoice_Post_Type::register_post_type();
+        // Register post type (need to call this before flushing rewrite rules)
+        $post_type_instance = Invoice_Post_Type::get_instance();
+        $post_type_instance->register_post_type();
 
         // Flush rewrite rules
         flush_rewrite_rules();
@@ -123,6 +141,9 @@ class Invoice_Creator {
         if (!get_option('invoice_creator_next_number')) {
             update_option('invoice_creator_next_number', 1);
         }
+
+        // Save version
+        update_option('invoice_creator_version', INVOICE_CREATOR_VERSION);
     }
 }
 
