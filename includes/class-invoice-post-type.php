@@ -54,7 +54,7 @@ class Invoice_Post_Type {
 
         $args = array(
             'labels'             => $labels,
-            'public'             => false,
+            'public'             => true,
             'publicly_queryable' => true,
             'show_ui'            => true,
             'show_in_menu'       => true,
