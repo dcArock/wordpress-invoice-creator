@@ -437,13 +437,20 @@ class Invoice_Meta_Boxes {
             // Hide default publish box
             $('#submitdiv').hide();
 
-            // Add custom buttons container
+            // Check if this is a draft invoice
+            var postStatus = '<?php echo esc_js($post->post_status); ?>';
+            var isDraft = (postStatus === 'draft');
+
+            // Add custom buttons container with appropriate labels
+            var saveDraftLabel = isDraft ? '<?php _e('Update Draft', 'invoice-creator'); ?>' : '<?php _e('Save as Draft', 'invoice-creator'); ?>';
+            var createInvoiceLabel = isDraft ? '<?php _e('Publish Invoice', 'invoice-creator'); ?>' : '<?php _e('Create Invoice', 'invoice-creator'); ?>';
+
             var customButtons = '<div id="invoice-custom-buttons" style="clear:both; padding-top:20px;">' +
                 '<input type="hidden" name="invoice_action" id="invoice_action" value="">' +
                 '<button type="button" class="button button-large" id="save-draft-btn" style="margin-right:10px;">' +
-                '<?php _e('Save as Draft', 'invoice-creator'); ?></button>' +
+                saveDraftLabel + '</button>' +
                 '<button type="button" class="button button-primary button-large" id="create-invoice-btn">' +
-                '<?php _e('Create Invoice', 'invoice-creator'); ?></button>' +
+                createInvoiceLabel + '</button>' +
                 '</div>';
 
             $('#invoice-totals').after(customButtons);

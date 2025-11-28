@@ -19,10 +19,11 @@ class Invoice_List_Page {
     }
 
     private function __construct() {
-        add_action('admin_menu', array($this, 'add_menu_page'));
+        add_action('admin_menu', array($this, 'add_menu_page'), 5);
         add_action('admin_post_duplicate_invoice', array($this, 'duplicate_invoice'));
         add_action('admin_post_delete_invoice', array($this, 'delete_invoice'));
         add_action('wp_ajax_update_invoice_status', array($this, 'update_invoice_status'));
+        add_action('admin_post_publish_draft_invoice', array($this, 'publish_draft_invoice'));
         add_action('admin_enqueue_scripts', array($this, 'enqueue_assets'));
     }
 
@@ -30,6 +31,7 @@ class Invoice_List_Page {
      * Add menu page
      */
     public function add_menu_page() {
+        // Add "All Invoices" submenu first
         add_submenu_page(
             'edit.php?post_type=invoice',
             __('All Invoices', 'invoice-creator'),
@@ -39,13 +41,14 @@ class Invoice_List_Page {
             array($this, 'render_page')
         );
 
-        // add_submenu_page(
-        //     'edit.php?post_type=invoice',
-        //     __('Create new Invoice', 'invoice-creator'),
-        //     __('Create new Invoice', 'invoice-creator'),
-        //     'edit_posts',
-        //     'post-new.php?post_type=invoice'
-        // );
+        // Add "Create New Invoice" submenu second
+        add_submenu_page(
+            'edit.php?post_type=invoice',
+            __('Create New Invoice', 'invoice-creator'),
+            __('Create New Invoice', 'invoice-creator'),
+            'edit_posts',
+            'post-new.php?post_type=invoice'
+        );
     }
 
     /**
@@ -187,6 +190,12 @@ class Invoice_List_Page {
                 <table class="wp-list-table widefat fixed striped table-view-list invoices-table">
                     <thead>
                         <tr>
+                            <th scope="col" class="manage-column column-date-created sortable <?php echo $orderby === 'date' ? 'sorted' : 'desc'; ?> <?php echo $orderby === 'date' ? strtolower($order) : ''; ?>">
+                                <a href="<?php echo add_query_arg(array('orderby' => 'date', 'order' => $orderby === 'date' && $order === 'ASC' ? 'DESC' : 'ASC')); ?>">
+                                    <span><?php _e('Date Created', 'invoice-creator'); ?></span>
+                                    <span class="sorting-indicator"></span>
+                                </a>
+                            </th>
                             <th scope="col" class="manage-column column-invoice-number sortable <?php echo $orderby === 'invoice_number' ? 'sorted' : 'desc'; ?> <?php echo $orderby === 'invoice_number' ? strtolower($order) : ''; ?>">
                                 <a href="<?php echo add_query_arg(array('orderby' => 'invoice_number', 'order' => $orderby === 'invoice_number' && $order === 'ASC' ? 'DESC' : 'ASC')); ?>">
                                     <span><?php _e('Invoice #', 'invoice-creator'); ?></span>
@@ -194,12 +203,7 @@ class Invoice_List_Page {
                                 </a>
                             </th>
                             <th scope="col" class="manage-column column-client"><?php _e('Client', 'invoice-creator'); ?></th>
-                            <th scope="col" class="manage-column column-date sortable <?php echo $orderby === 'date' ? 'sorted' : 'desc'; ?> <?php echo $orderby === 'date' ? strtolower($order) : ''; ?>">
-                                <a href="<?php echo add_query_arg(array('orderby' => 'date', 'order' => $orderby === 'date' && $order === 'ASC' ? 'DESC' : 'ASC')); ?>">
-                                    <span><?php _e('Date', 'invoice-creator'); ?></span>
-                                    <span class="sorting-indicator"></span>
-                                </a>
-                            </th>
+                            <th scope="col" class="manage-column column-invoice-date"><?php _e('Invoice Date', 'invoice-creator'); ?></th>
                             <th scope="col" class="manage-column column-due-date"><?php _e('Due Date', 'invoice-creator'); ?></th>
                             <th scope="col" class="manage-column column-total"><?php _e('Total', 'invoice-creator'); ?></th>
                             <th scope="col" class="manage-column column-status"><?php _e('Status', 'invoice-creator'); ?></th>
@@ -216,6 +220,9 @@ class Invoice_List_Page {
                             $status = get_post_meta($invoice->ID, '_invoice_status', true);
                             $status = $status ? $status : 'new';
 
+                            // Get date created (post creation date)
+                            $date_created = get_the_date('M d, Y', $invoice->ID);
+
                             // Format dates
                             if ($invoice_date) {
                                 $invoice_date = date('M d, Y', strtotime($invoice_date));
@@ -225,16 +232,19 @@ class Invoice_List_Page {
                             }
                         ?>
                         <tr>
+                            <td class="column-date-created">
+                                <?php echo esc_html($date_created); ?>
+                            </td>
                             <td class="column-invoice-number">
                                 <strong><?php echo esc_html($invoice_number); ?></strong>
                                 <?php if ($invoice->post_status === 'draft'): ?>
-                                    <span class="invoice-draft-badge" style="background-color: #ddd; color: #333; padding: 2px 8px; border-radius: 3px; font-size: 11px; margin-left: 8px; font-weight: normal;">Draft</span>
+                                    <span class="invoice-draft-badge" style="color: #999; font-size: 12px; margin-left: 8px; font-weight: normal;">DRAFT</span>
                                 <?php endif; ?>
                             </td>
                             <td class="column-client">
                                 <?php echo esc_html($client_name ? $client_name : '-'); ?>
                             </td>
-                            <td class="column-date">
+                            <td class="column-invoice-date">
                                 <?php echo esc_html($invoice_date ? $invoice_date : '-'); ?>
                             </td>
                             <td class="column-due-date">
@@ -269,6 +279,13 @@ class Invoice_List_Page {
                                        title="<?php _e('Edit Invoice', 'invoice-creator'); ?>">
                                         <?php _e('Edit', 'invoice-creator'); ?>
                                     </a>
+                                    <?php if ($invoice->post_status === 'draft'): ?>
+                                    <a href="<?php echo wp_nonce_url(admin_url('admin-post.php?action=publish_draft_invoice&invoice_id=' . $invoice->ID), 'publish_draft_invoice_' . $invoice->ID); ?>"
+                                       class="button button-small button-primary"
+                                       title="<?php _e('Publish Invoice', 'invoice-creator'); ?>">
+                                        <?php _e('Publish', 'invoice-creator'); ?>
+                                    </a>
+                                    <?php endif; ?>
                                     <a href="<?php echo wp_nonce_url(admin_url('admin-post.php?action=duplicate_invoice&invoice_id=' . $invoice->ID), 'duplicate_invoice_' . $invoice->ID); ?>"
                                        class="button button-small"
                                        title="<?php _e('Duplicate Invoice', 'invoice-creator'); ?>">
@@ -396,6 +413,50 @@ class Invoice_List_Page {
         wp_delete_post($invoice_id, true);
 
         wp_redirect(admin_url('edit.php?post_type=invoice&page=all-invoices&deleted=1'));
+        exit;
+    }
+
+    /**
+     * Publish draft invoice
+     */
+    public function publish_draft_invoice() {
+        if (!isset($_GET['invoice_id']) || !isset($_GET['_wpnonce'])) {
+            wp_die(__('Invalid request.', 'invoice-creator'));
+        }
+
+        $invoice_id = intval($_GET['invoice_id']);
+
+        if (!wp_verify_nonce($_GET['_wpnonce'], 'publish_draft_invoice_' . $invoice_id)) {
+            wp_die(__('Security check failed.', 'invoice-creator'));
+        }
+
+        if (!current_user_can('edit_posts')) {
+            wp_die(__('You do not have permission to publish invoices.', 'invoice-creator'));
+        }
+
+        $post = get_post($invoice_id);
+
+        if (!$post || $post->post_type !== 'invoice') {
+            wp_die(__('Invoice not found.', 'invoice-creator'));
+        }
+
+        if ($post->post_status !== 'draft') {
+            wp_die(__('This invoice is not a draft.', 'invoice-creator'));
+        }
+
+        // Update post status to publish
+        wp_update_post(array(
+            'ID' => $invoice_id,
+            'post_status' => 'publish'
+        ));
+
+        // Update invoice status from draft to new
+        $current_status = get_post_meta($invoice_id, '_invoice_status', true);
+        if ($current_status === 'draft' || empty($current_status)) {
+            update_post_meta($invoice_id, '_invoice_status', 'new');
+        }
+
+        wp_redirect(admin_url('edit.php?post_type=invoice&page=all-invoices&status_updated=1'));
         exit;
     }
 
