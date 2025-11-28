@@ -39,13 +39,13 @@ class Invoice_List_Page {
             array($this, 'render_page')
         );
 
-        add_submenu_page(
-            'edit.php?post_type=invoice',
-            __('Create new Invoice', 'invoice-creator'),
-            __('Create new Invoice', 'invoice-creator'),
-            'edit_posts',
-            'post-new.php?post_type=invoice'
-        );
+        // add_submenu_page(
+        //     'edit.php?post_type=invoice',
+        //     __('Create new Invoice', 'invoice-creator'),
+        //     __('Create new Invoice', 'invoice-creator'),
+        //     'edit_posts',
+        //     'post-new.php?post_type=invoice'
+        // );
     }
 
     /**
