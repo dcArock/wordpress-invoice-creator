@@ -513,8 +513,8 @@ class Invoice_Meta_Boxes {
 
         if (isset($_POST['invoice_action'])) {
             if ($_POST['invoice_action'] === 'create') {
-                // Build the invoice URL without HTML encoding
-                $permalink = get_permalink($post_id);
+                // Get permalink and decode HTML entities (get_permalink returns &amp; for custom post types)
+                $permalink = html_entity_decode(get_permalink($post_id));
                 $separator = (strpos($permalink, '?') === false) ? '?' : '&';
                 $invoice_url = $permalink . $separator . 'print=1';
 
