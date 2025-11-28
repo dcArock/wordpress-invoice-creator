@@ -99,7 +99,7 @@ class Invoice_List_Page {
                 delete_transient('invoice_created_' . get_current_user_id());
                 ?>
                 <script type="text/javascript">
-                    window.open('<?php echo esc_js($invoice_url); ?>', '_blank');
+                    window.open(<?php echo wp_json_encode($invoice_url); ?>, '_blank');
                 </script>
                 <?php
             }
