@@ -22,7 +22,7 @@ class Invoice_List_Page {
         add_action('admin_menu', array($this, 'add_menu_page'));
         add_action('admin_post_duplicate_invoice', array($this, 'duplicate_invoice'));
         add_action('admin_post_delete_invoice', array($this, 'delete_invoice'));
-        add_action('admin_post_update_invoice_status', array($this, 'update_invoice_status'));
+        add_action('wp_ajax_update_invoice_status', array($this, 'update_invoice_status'));
         add_action('admin_enqueue_scripts', array($this, 'enqueue_assets'));
     }
 
@@ -37,6 +37,14 @@ class Invoice_List_Page {
             'edit_posts',
             'all-invoices',
             array($this, 'render_page')
+        );
+
+        add_submenu_page(
+            'edit.php?post_type=invoice',
+            __('Create new Invoice', 'invoice-creator'),
+            __('Create new Invoice', 'invoice-creator'),
+            'edit_posts',
+            'post-new.php?post_type=invoice'
         );
     }
 
@@ -78,6 +86,20 @@ class Invoice_List_Page {
         }
         if (isset($_GET['status_updated']) && $_GET['status_updated'] === '1') {
             $message = '<div class="notice notice-success is-dismissible"><p>' . __('Invoice status updated successfully.', 'invoice-creator') . '</p></div>';
+        }
+        if (isset($_GET['invoice_created']) && $_GET['invoice_created'] === '1') {
+            $message = '<div class="notice notice-success is-dismissible"><p>' . __('Invoice created successfully.', 'invoice-creator') . '</p></div>';
+
+            // Get the invoice URL from transient and open in new tab
+            $invoice_url = get_transient('invoice_created_' . get_current_user_id());
+            if ($invoice_url) {
+                delete_transient('invoice_created_' . get_current_user_id());
+                ?>
+                <script type="text/javascript">
+                    window.open('<?php echo esc_js($invoice_url); ?>', '_blank');
+                </script>
+                <?php
+            }
         }
 
         // Get filter and search parameters

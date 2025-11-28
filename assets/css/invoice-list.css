@@ -78,13 +78,20 @@
 }
 
 .invoice-status-select {
-    padding: 4px 8px;
+    padding: 4px 24px 4px 8px;
     border-radius: 3px;
     font-size: 12px;
     font-weight: 600;
     text-transform: uppercase;
     border: 1px solid #ddd;
     cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 6px center;
+    background-size: 14px;
 }
 
 .invoice-status-select option[value="new"] {
@@ -113,33 +120,38 @@
 }
 
 .invoice-status-select[data-status="new"] {
-    background: #9ca3af;
+    background-color: #9ca3af;
     color: #fff;
     border-color: #9ca3af;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
 }
 
 .invoice-status-select[data-status="sent"] {
-    background: #3b82f6;
+    background-color: #3b82f6;
     color: #fff;
     border-color: #3b82f6;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
 }
 
 .invoice-status-select[data-status="paid"] {
-    background: #22c55e;
+    background-color: #22c55e;
     color: #fff;
     border-color: #22c55e;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
 }
 
 .invoice-status-select[data-status="overdue"] {
-    background: #ef4444;
+    background-color: #ef4444;
     color: #fff;
     border-color: #ef4444;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
 }
 
 .invoice-status-select[data-status="cancelled"] {
-    background: #4b5563;
+    background-color: #4b5563;
     color: #fff;
     border-color: #4b5563;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
 }
 
 .no-invoices {
