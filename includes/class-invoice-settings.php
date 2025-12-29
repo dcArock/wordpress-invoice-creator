@@ -47,6 +47,7 @@ class Invoice_Settings {
         register_setting('invoice_creator_settings', 'invoice_creator_company_website');
         register_setting('invoice_creator_settings', 'invoice_creator_company_address');
         register_setting('invoice_creator_settings', 'invoice_creator_company_logo');
+        register_setting('invoice_creator_settings', 'invoice_creator_logo_height');
         register_setting('invoice_creator_settings', 'invoice_creator_id_prefix');
     }
 
@@ -68,6 +69,7 @@ class Invoice_Settings {
             update_option('invoice_creator_company_website', esc_url_raw($_POST['company_website']));
             update_option('invoice_creator_company_address', sanitize_textarea_field($_POST['company_address']));
             update_option('invoice_creator_company_logo', esc_url_raw($_POST['company_logo']));
+            update_option('invoice_creator_logo_height', absint($_POST['logo_height']));
             update_option('invoice_creator_id_prefix', sanitize_text_field($_POST['invoice_id_prefix']));
 
             echo '<div class="notice notice-success is-dismissible"><p>' .
@@ -81,6 +83,7 @@ class Invoice_Settings {
         $company_website = get_option('invoice_creator_company_website', '');
         $company_address = get_option('invoice_creator_company_address', '');
         $company_logo = get_option('invoice_creator_company_logo', '');
+        $logo_height = get_option('invoice_creator_logo_height', '');
         $id_prefix = get_option('invoice_creator_id_prefix', '');
         ?>
 
@@ -166,6 +169,20 @@ class Invoice_Settings {
                                              style="max-width: 200px; height: auto;">
                                     <?php endif; ?>
                                 </div>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <th scope="row">
+                                <label for="logo_height"><?php _e('Logo Height (px)', 'invoice-creator'); ?></label>
+                            </th>
+                            <td>
+                                <input type="number" id="logo_height" name="logo_height"
+                                       value="<?php echo esc_attr($logo_height); ?>"
+                                       class="small-text" placeholder="200" min="1">
+                                <p class="description">
+                                    <?php _e('Set the maximum height for your logo in pixels on printed invoices.', 'invoice-creator'); ?>
+                                </p>
                             </td>
                         </tr>
 

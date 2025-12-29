@@ -61,6 +61,7 @@ class Invoice_Print {
         $company_website = get_option('invoice_creator_company_website', '');
         $company_address = get_option('invoice_creator_company_address', '');
         $company_logo = get_option('invoice_creator_company_logo', '');
+        $logo_height = get_option('invoice_creator_logo_height', '');
 
         // Format dates
         if ($invoice_date) {
@@ -107,7 +108,11 @@ class Invoice_Print {
 
                 .company-logo {
                     max-width: 150px;
+                    <?php if ($logo_height): ?>
+                    max-height: <?php echo absint($logo_height); ?>px;
+                    <?php else: ?>
                     max-height: 200px;
+                    <?php endif; ?>
                     height: auto;
                     margin-bottom: 15px;
                 }
@@ -368,7 +373,7 @@ class Invoice_Print {
                                     <div class="service-description"><?php echo esc_html($item['description']); ?></div>
                                 <?php endif; ?>
                             </td>
-                            <td>$<?php echo number_format((float)$item['price'], 2); ?></td>
+                            <td><?php echo ((float)$item['price'] > 0) ? '$' . number_format((float)$item['price'], 2) : ''; ?></td>
                         </tr>
                         <?php endforeach; ?>
                     </tbody>
